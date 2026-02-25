@@ -1,0 +1,181 @@
+# ──────────────────────────────────────────────────────────────────────
+# IMPORTANT: This workflow belongs in the BETA RELEASE repo:
+#   benekreng/oab/.github/workflows/update_appcast_beta.yml
+#
+# Copy this file there. It does NOT run from the source repo (OXI-APP).
+# ──────────────────────────────────────────────────────────────────────
+#
+# Triggered when a GitHub Release is published or deleted on benekreng/oab.
+# Generates an appcast pointing to the latest release in this repo.
+# The app itself compares beta vs stable versions at runtime.
+#
+# Required secret: SPARKLE_ED25519_PRIVATE_KEY
+#   Must be the same key used in the stable repo's appcast workflow.
+
+name: Update Beta Appcast
+
+on:
+  release:
+    types: [published, deleted]
+  workflow_dispatch:
+
+jobs:
+  update-appcast:
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Resolve latest published release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh release list --limit 1 --exclude-drafts --json tagName --jq '.[0].tagName')
+
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "No published releases found. Clearing appcast files."
+            echo "NO_RELEASES=true" >> $GITHUB_ENV
+          else
+            echo "Latest published release: $LATEST_TAG"
+            echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+            echo "NO_RELEASES=false" >> $GITHUB_ENV
+          fi
+
+      - name: Download Sparkle tools
+        if: env.NO_RELEASES == 'false'
+        run: |
+          SPARKLE_VERSION="2.8.1"
+          curl -L -o sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          mkdir -p sparkle-tools
+          tar xf sparkle.tar.xz -C sparkle-tools/
+          rm sparkle.tar.xz
+
+      - name: Download release assets
+        if: env.NO_RELEASES == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Downloading assets for: $LATEST_TAG"
+          mkdir -p assets
+          gh release download "$LATEST_TAG" --dir assets/
+          echo "Downloaded assets:"
+          ls -la assets/
+
+      - name: Sign assets with Ed25519
+        if: env.NO_RELEASES == 'false'
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
+        run: |
+          MAC_FILE=$(ls assets/*macOS* 2>/dev/null || ls assets/*macos* 2>/dev/null || ls assets/*.zip 2>/dev/null | head -1)
+          WIN_FILE=$(ls assets/*Windows* 2>/dev/null || ls assets/*windows* 2>/dev/null || ls assets/*.exe 2>/dev/null | head -1)
+
+          echo "macOS file: $MAC_FILE"
+          echo "Windows file: $WIN_FILE"
+
+          if [ -n "$MAC_FILE" ]; then
+            MAC_SIGN_OUTPUT=$(echo "$SPARKLE_KEY" | sparkle-tools/bin/sign_update --ed-key-file - "$MAC_FILE")
+            MAC_SIGNATURE=$(echo "$MAC_SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
+            MAC_LENGTH=$(stat -f%z "$MAC_FILE")
+            MAC_FILENAME=$(basename "$MAC_FILE")
+            echo "MAC_SIGNATURE=$MAC_SIGNATURE" >> $GITHUB_ENV
+            echo "MAC_LENGTH=$MAC_LENGTH" >> $GITHUB_ENV
+            echo "MAC_FILENAME=$MAC_FILENAME" >> $GITHUB_ENV
+          fi
+
+          if [ -n "$WIN_FILE" ]; then
+            WIN_SIGN_OUTPUT=$(echo "$SPARKLE_KEY" | sparkle-tools/bin/sign_update --ed-key-file - "$WIN_FILE")
+            WIN_SIGNATURE=$(echo "$WIN_SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
+            WIN_LENGTH=$(stat -f%z "$WIN_FILE")
+            WIN_FILENAME=$(basename "$WIN_FILE")
+            echo "WIN_SIGNATURE=$WIN_SIGNATURE" >> $GITHUB_ENV
+            echo "WIN_LENGTH=$WIN_LENGTH" >> $GITHUB_ENV
+            echo "WIN_FILENAME=$WIN_FILENAME" >> $GITHUB_ENV
+          fi
+
+      - name: Generate appcast XML files
+        if: env.NO_RELEASES == 'false'
+        run: |
+          VERSION="${LATEST_TAG#v}"
+          REPO="${{ github.repository }}"
+          DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
+          RELEASE_NOTES_URL="https://github.com/${REPO}/releases/tag/${LATEST_TAG}"
+
+          if [ -n "$MAC_SIGNATURE" ]; then
+            DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${MAC_FILENAME}"
+            cat > appcast-macos.xml << XMLEOF
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>OXI App macOS Beta Updates</title>
+    <item>
+      <title>${VERSION}</title>
+      <pubDate>${DATE}</pubDate>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>${RELEASE_NOTES_URL}</sparkle:releaseNotesLink>
+      <enclosure
+        url="${DOWNLOAD_URL}"
+        sparkle:version="${VERSION//./}"
+        sparkle:shortVersionString="${VERSION}"
+        sparkle:edSignature="${MAC_SIGNATURE}"
+        length="${MAC_LENGTH}"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>
+XMLEOF
+            echo "Generated appcast-macos.xml for ${VERSION}"
+          fi
+
+          if [ -n "$WIN_SIGNATURE" ]; then
+            DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${WIN_FILENAME}"
+            cat > appcast-windows.xml << XMLEOF
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>OXI App Windows Beta Updates</title>
+    <item>
+      <title>${VERSION}</title>
+      <pubDate>${DATE}</pubDate>
+      <sparkle:releaseNotesLink>${RELEASE_NOTES_URL}</sparkle:releaseNotesLink>
+      <enclosure
+        url="${DOWNLOAD_URL}"
+        sparkle:version="${VERSION//./}"
+        sparkle:shortVersionString="${VERSION}"
+        sparkle:edSignature="${WIN_SIGNATURE}"
+        length="${WIN_LENGTH}"
+        type="application/octet-stream"
+        sparkle:os="windows-x64" />
+    </item>
+  </channel>
+</rss>
+XMLEOF
+            echo "Generated appcast-windows.xml for ${VERSION}"
+          fi
+
+      - name: Clear appcast if no releases exist
+        if: env.NO_RELEASES == 'true'
+        run: |
+          rm -f appcast-macos.xml appcast-windows.xml
+          echo "Cleared appcast files (no published releases)"
+
+      - name: Push to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf assets/ sparkle-tools/
+
+          git add -A appcast-macos.xml appcast-windows.xml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update beta appcast → ${LATEST_TAG:-cleared}"
+            git push origin gh-pages
+          fi
