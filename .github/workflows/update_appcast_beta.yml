@@ -110,8 +110,8 @@ jobs:
           # "1.4.2-beta.1" -> "1.4.2.1", "1.4.2" -> "1.4.2"
           # This matches what Flutter puts in CFBundleShortVersionString
           FLUTTER_VERSION=$(echo "$VERSION" | sed -E 's/-[a-zA-Z]+\.([0-9]+)/.\1/')
-          # Strip dots and any remaining pre-release suffix for numeric build number
-          BUILD=$(echo "$VERSION" | sed 's/-.*//; s/\.//g')
+          # Match Flutter's default CFBundleVersion (0 when +xx is omitted or +00)
+          BUILD=0
 
           if [ -n "$MAC_SIGNATURE" ]; then
             DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${MAC_FILENAME}"
