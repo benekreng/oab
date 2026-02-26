@@ -4,10 +4,10 @@
     <title>OXI App Windows Beta Updates</title>
     <item>
       <title>1.4.2-beta.1</title>
-      <pubDate>Thu, 26 Feb 2026 22:53:51 +0000</pubDate>
+      <pubDate>Thu, 26 Feb 2026 22:59:26 +0000</pubDate>
       <enclosure
         url="https://github.com/benekreng/oab/releases/download/1.4.2-beta.1/OXI_Desktop_v1.5.2-beta.1_Windows.zip"
-        sparkle:version="142"
+        sparkle:version="0"
         sparkle:shortVersionString="1.4.2.1"
         sparkle:edSignature="+HSASrfySFQJYLfss5op83CCH0cPk64Q3aaeKXRAOyIk7n+i8b3r3IZdo21Yiqt8sgIwgA2KtPGqkKnwXAuwCA=="
         length="50251678"
