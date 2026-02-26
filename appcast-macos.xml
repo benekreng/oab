@@ -3,13 +3,13 @@
   <channel>
     <title>OXI App macOS Beta Updates</title>
     <item>
-      <title>1.4.2-beta.1</title>
-      <pubDate>Thu, 26 Feb 2026 22:59:26 +0000</pubDate>
+      <title>1.5.2-beta.1</title>
+      <pubDate>Thu, 26 Feb 2026 23:01:47 +0000</pubDate>
       <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/benekreng/oab/releases/download/1.4.2-beta.1/OXI_Desktop_v1.5.2-beta.1_macOS.zip"
+        url="https://github.com/benekreng/oab/releases/download/1.5.2-beta.1/OXI_Desktop_v1.5.2-beta.1_macOS.zip"
         sparkle:version="0"
-        sparkle:shortVersionString="1.4.2.1"
+        sparkle:shortVersionString="1.5.2.1"
         sparkle:edSignature="BJlheDaOGlz3RnbEh86h6S+XQM2ZChzwWOqyWwcVNCW3KMsA53edYA5wndPOUJbZvwGpATi0jaWmXewB0/XUDA=="
         length="25838476"
         type="application/octet-stream" />
