@@ -106,9 +106,11 @@ jobs:
           VERSION="${LATEST_TAG#v}"
           REPO="${{ github.repository }}"
           DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
-          RELEASE_NOTES_URL="https://github.com/${REPO}/releases/tag/${LATEST_TAG}"
-          # Strip dots and any pre-release suffix to get a numeric build number
-          # e.g. "1.5.2-beta.1" -> "152", "1.4.0" -> "140"
+          # Convert semver pre-release to Flutter's dot format:
+          # "1.4.2-beta.1" -> "1.4.2.1", "1.4.2" -> "1.4.2"
+          # This matches what Flutter puts in CFBundleShortVersionString
+          FLUTTER_VERSION=$(echo "$VERSION" | sed -E 's/-[a-zA-Z]+\.([0-9]+)/.\1/')
+          # Strip dots and any remaining pre-release suffix for numeric build number
           BUILD=$(echo "$VERSION" | sed 's/-.*//; s/\.//g')
 
           if [ -n "$MAC_SIGNATURE" ]; then
@@ -122,18 +124,17 @@ jobs:
               "      <title>${VERSION}</title>" \
               "      <pubDate>${DATE}</pubDate>" \
               '      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>' \
-              "      <sparkle:releaseNotesLink>${RELEASE_NOTES_URL}</sparkle:releaseNotesLink>" \
               '      <enclosure' \
               "        url=\"${DOWNLOAD_URL}\"" \
               "        sparkle:version=\"${BUILD}\"" \
-              "        sparkle:shortVersionString=\"${VERSION}\"" \
+              "        sparkle:shortVersionString=\"${FLUTTER_VERSION}\"" \
               "        sparkle:edSignature=\"${MAC_SIGNATURE}\"" \
               "        length=\"${MAC_LENGTH}\"" \
               '        type="application/octet-stream" />' \
               '    </item>' \
               '  </channel>' \
               '</rss>' > appcast-macos.xml
-            echo "Generated appcast-macos.xml for ${VERSION}"
+            echo "Generated appcast-macos.xml for ${VERSION} (shortVersionString=${FLUTTER_VERSION}, build=${BUILD})"
           fi
 
           if [ -n "$WIN_SIGNATURE" ]; then
@@ -146,11 +147,10 @@ jobs:
               '    <item>' \
               "      <title>${VERSION}</title>" \
               "      <pubDate>${DATE}</pubDate>" \
-              "      <sparkle:releaseNotesLink>${RELEASE_NOTES_URL}</sparkle:releaseNotesLink>" \
               '      <enclosure' \
               "        url=\"${DOWNLOAD_URL}\"" \
               "        sparkle:version=\"${BUILD}\"" \
-              "        sparkle:shortVersionString=\"${VERSION}\"" \
+              "        sparkle:shortVersionString=\"${FLUTTER_VERSION}\"" \
               "        sparkle:edSignature=\"${WIN_SIGNATURE}\"" \
               "        length=\"${WIN_LENGTH}\"" \
               '        type="application/octet-stream"' \
@@ -158,7 +158,7 @@ jobs:
               '    </item>' \
               '  </channel>' \
               '</rss>' > appcast-windows.xml
-            echo "Generated appcast-windows.xml for ${VERSION}"
+            echo "Generated appcast-windows.xml for ${VERSION} (shortVersionString=${FLUTTER_VERSION}, build=${BUILD})"
           fi
 
       - name: Clear appcast if no releases exist
