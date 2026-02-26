@@ -107,7 +107,9 @@ jobs:
           REPO="${{ github.repository }}"
           DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
           RELEASE_NOTES_URL="https://github.com/${REPO}/releases/tag/${LATEST_TAG}"
-          BUILD="${VERSION//./}"
+          # Strip dots and any pre-release suffix to get a numeric build number
+          # e.g. "1.5.2-beta.1" -> "152", "1.4.0" -> "140"
+          BUILD=$(echo "$VERSION" | sed 's/-.*//; s/\.//g')
 
           if [ -n "$MAC_SIGNATURE" ]; then
             DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${MAC_FILENAME}"
