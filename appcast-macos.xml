@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>OXI App macOS Beta Updates</title>
+    <item>
+      <title>1.5.0-beta.1</title>
+      <pubDate>Wed, 25 Mar 2026 17:43:33 +0000</pubDate>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/benekreng/oab/releases/download/1.5.0-beta.1/OXI_Desktop_v1.5.0-beta.1_macOS.zip"
+        sparkle:version="15001"
+        sparkle:shortVersionString="1.5.0.1"
+        sparkle:edSignature="MZNXzkrNPXtBLKxvos1TZbQwGT2gyUzWsQMZ4W2E3GaWzJyONQODwZw/UMys2ZuYpGzYfkPMpHQMlEk4YYhtBw=="
+        length="26402292"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>
