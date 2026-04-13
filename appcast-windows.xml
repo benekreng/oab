@@ -3,14 +3,14 @@
   <channel>
     <title>OXI App Windows Beta Updates</title>
     <item>
-      <title>1.5.0-beta.1</title>
-      <pubDate>Wed, 25 Mar 2026 17:43:33 +0000</pubDate>
+      <title>1.5.0-beta.2</title>
+      <pubDate>Mon, 13 Apr 2026 17:00:41 +0000</pubDate>
       <enclosure
-        url="https://github.com/benekreng/oab/releases/download/1.5.0-beta.1/OXI_Desktop_v1.5.0-beta.1_Windows.zip"
-        sparkle:version="15001"
-        sparkle:shortVersionString="1.5.0.1"
-        sparkle:edSignature="htdR2JXfPszUwVAAQnG2h5mmov3kQj8T9uTnUjTRdBssIpaC59bENWDv8PR7RjwEcG6cT2Ntuj6Fagv3Gz/LAA=="
-        length="51229920"
+        url="https://github.com/benekreng/oab/releases/download/1.5.0-beta.2/OXI_Desktop_v1.5.0-beta.2_Windows.zip"
+        sparkle:version="15002"
+        sparkle:shortVersionString="1.5.0.2"
+        sparkle:edSignature="R0GTPneImfrC0Kp5do9JTuYqy4sHFZ/h1IuP5bZ0kvGd0hWLX90rHKgGtIaboK/r5wMHTsCbj4CCDwjAv3sBDA=="
+        length="51337730"
         type="application/octet-stream"
         sparkle:os="windows-x64" />
     </item>
